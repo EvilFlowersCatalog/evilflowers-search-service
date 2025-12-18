@@ -1,0 +1,15 @@
+python-dotenv
+
+# API
+fastapi
+uvicorn
+python-multipart
+httpx
+
+# Vector db
+numpy
+torch
+milvus
+sentence_transformers
+pymilvus
+"pymilvus[milvus-lite]"
