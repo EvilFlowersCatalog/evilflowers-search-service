@@ -9,7 +9,5 @@ httpx
 # Vector db
 numpy
 torch
-milvus
 sentence_transformers
-pymilvus
-"pymilvus[milvus-lite]"
+pymilvus>=2.4.2
