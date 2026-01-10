@@ -3,3 +3,4 @@ env
 milvus_lite.db
 .DS_Store
 __pycache__
+temp

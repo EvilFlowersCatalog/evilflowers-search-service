@@ -8,6 +8,7 @@ class Config:
     MILVUS_HOST = os.getenv('MILVUS_HOST', 'localhost')
     MILVUS_PORT = int(os.getenv('MILVUS_PORT', '19530'))
     MILVUS_COLLECTION_NAME = os.getenv('MILVUS_COLLECTION_NAME', 'document_embeddings')
+    MILVUS_LITE_DB=os.getenv('MILVUS_LITE_DB', '/app/data/milvus_lite.db')
     
     # Embeddings
     MODEL_NAME = "sentence-transformers/stsb-xlm-r-multilingual"
