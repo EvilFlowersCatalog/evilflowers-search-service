@@ -12,3 +12,7 @@ torch
 sentence_transformers
 pymilvus>=2.4.2
 pymilvus[milvus_lite]
+
+# elastic
+elasticsearch
+aiohttp

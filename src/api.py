@@ -5,7 +5,7 @@ import logging
 
 from search_service.SemanticService import SemanticService
 from search_service.SemanticSearch import SemanticSearch
-from elvira_elasticsearch_client import ElasticsearchClient
+from search_service.ElasticSearchClient import ElasticSearchClient
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ app = FastAPI(
 )
 
 semantic_service: SemanticService | None = None
-elasticsearch_client: ElasticsearchClient | None = None
+elasticsearch_client: ElasticSearchClient | None = None
 semantic_search: SemanticSearch | None = None
 
 
@@ -31,7 +31,7 @@ def get_semantic_service():
 def get_elasticsearch_client():
     global elasticsearch_client
     if elasticsearch_client is None:
-        elasticsearch_client = ElasticsearchClient()
+        elasticsearch_client = ElasticSearchClient()
     return elasticsearch_client
 
 
@@ -60,33 +60,33 @@ class ElasticsearchSearchRequest(BaseModel):
     document_id: Optional[str] = None
 
 
-@app.on_event("startup")
-async def on_startup():
-    es_client = get_elasticsearch_client()
-    await es_client.ensure_index()
+# @app.on_event("startup")
+# async def on_startup():
+#     es_client = get_elasticsearch_client()
+#     await es_client.ensure_index()
 
 
-@app.on_event("shutdown")
-async def on_shutdown():
-    global elasticsearch_client
-    if elasticsearch_client is not None:
-        await elasticsearch_client.close()
-        elasticsearch_client = None
+# @app.on_event("shutdown")
+# async def on_shutdown():
+#     global elasticsearch_client
+#     if elasticsearch_client is not None:
+#         await elasticsearch_client.close()
+#         elasticsearch_client = None
 
 
 @app.get("/health")
 async def health_check():
     try:
         semantic_service = get_semantic_service()
-        es_client = get_elasticsearch_client()
+        # es_client = get_elasticsearch_client()
 
         milvus_stats = semantic_service.milvus_manager.get_stats()
-        es_health = await es_client.check_connection()
+        # es_health = await es_client.check_connection()
 
         return {
             "status": "healthy",
             "milvus": milvus_stats,
-            "elasticsearch": {"connected": es_health},
+            # "elasticsearch": {"connected": es_health},
         }
     except Exception as e:
         return {"status": "unhealthy", "error": str(e)}
@@ -103,16 +103,16 @@ async def index_document(request: IndexRequest):
             chunks=request.chunks
         )
 
-        es_result = await es_client.bulk_index_chunks(
-            document_id=request.document_id,
-            chunks=request.chunks,
-            refresh=True
-        )
+        # es_result = await es_client.bulk_index_chunks(
+        #     document_id=request.document_id,
+        #     chunks=request.chunks,
+        #     refresh=True
+        # )
 
         return {
             "document_id": request.document_id,
             "milvus": milvus_result,
-            "elasticsearch": es_result,
+            # "elasticsearch": es_result,
         }
     except Exception as e:
         logger.error(f"Indexing failed: {e}")
@@ -123,15 +123,15 @@ async def index_document(request: IndexRequest):
 async def delete_document(document_id: str):
     try:
         semantic_service = get_semantic_service()
-        es_client = get_elasticsearch_client()
+        # es_client = get_elasticsearch_client()
 
         milvus_result = semantic_service.delete_document(document_id)
-        es_result = await es_client.delete_document(document_id, refresh=True)
+        # es_result = await es_client.delete_document(document_id, refresh=True)
 
         return {
             "document_id": document_id,
             "milvus": milvus_result,
-            "elasticsearch": es_result,
+            # "elasticsearch": es_result,
         }
     except Exception as e:
         logger.error(f"Deletion failed: {e}")
@@ -183,6 +183,6 @@ async def elasticsearch_search_endpoint(request: ElasticsearchSearchRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+# if __name__ == "__main__":
+#     import uvicorn
+#     uvicorn.run(app, host="0.0.0.0", port=8001)

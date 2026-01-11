@@ -8,7 +8,7 @@ from elasticsearch.helpers import async_bulk
 logger = logging.getLogger(__name__)
 
 
-class ElasticsearchClient:
+class ElasticSearchClient:
     def __init__(
         self,
         host: Optional[str] = None,
