@@ -117,24 +117,31 @@ async def health_check():
 async def index_document(request: IndexRequest):
     print("INDEXING DOCUMENT:", request.document_id)
     try:
-        # semantic_service = get_semantic_service()
+        # Get clients
         es_client = get_elasticsearch_client()
-
-        # milvus_result = semantic_service.index_document(
-        #     document_id=request.document_id,
-        #     chunks=request.chunks
-        # )
-
+        # semantic_service = get_semantic_service()  # Uncomment when enabling Milvus
+        
+        # Delete existing document first to prevent duplicates
+        # await es_client.delete_document(request.document_id, refresh=True)
+        # semantic_service.delete_document(request.document_id)  # Uncomment when enabling Milvus
+        
+        # Index in Elasticsearch
         es_result = await es_client.index_document(
             document_id=request.document_id,
             chunks=request.chunks["chunks"],
             refresh=True
         )
+        
+        # Index in Milvus (when enabled)
+        # milvus_result = semantic_service.index_document(
+        #     document_id=request.document_id,
+        #     chunks=request.chunks["chunks"]
+        # )
 
         return {
             "document_id": request.document_id,
-            # "milvus": milvus_result no duplicate indexing,
             "elasticsearch": es_result,
+            # "milvus": milvus_result,
         }
         
     except Exception as e:
