@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 import logging
+import json
 
 from search_service.SemanticService import SemanticService
 from search_service.SemanticSearch import SemanticSearch
@@ -74,6 +75,26 @@ class ElasticsearchSearchRequest(BaseModel):
 #         elasticsearch_client = None
 
 
+@app.get("/stats")
+async def get_stats():
+    try:
+        semantic_service = get_semantic_service()
+        es_client = get_elasticsearch_client()
+
+        # milvus_stats = semantic_service.milvus_manager.get_stats()
+        es_stats = await es_client.stats_overview()
+
+        logger.info("Elasticsearch stats:\n%s", json.dumps(es_stats, indent=2))
+
+        return {
+            "elasticsearch": es_stats,
+            # "milvus": milvus_stats,
+        }
+    except Exception as e:
+        logger.error("Stats endpoint failed: %s", e)
+        return {"error": str(e)}
+
+
 @app.get("/health")
 async def health_check():
     try:
@@ -94,26 +115,28 @@ async def health_check():
 
 @app.post("/index")
 async def index_document(request: IndexRequest):
+    print("INDEXING DOCUMENT:", request.document_id)
     try:
-        semantic_service = get_semantic_service()
+        # semantic_service = get_semantic_service()
         es_client = get_elasticsearch_client()
 
-        milvus_result = semantic_service.index_document(
-            document_id=request.document_id,
-            chunks=request.chunks
-        )
-
-        # es_result = await es_client.bulk_index_chunks(
+        # milvus_result = semantic_service.index_document(
         #     document_id=request.document_id,
-        #     chunks=request.chunks,
-        #     refresh=True
+        #     chunks=request.chunks
         # )
+
+        es_result = await es_client.index_document(
+            document_id=request.document_id,
+            chunks=request.chunks["chunks"],
+            refresh=True
+        )
 
         return {
             "document_id": request.document_id,
-            "milvus": milvus_result,
-            # "elasticsearch": es_result,
+            # "milvus": milvus_result no duplicate indexing,
+            "elasticsearch": es_result,
         }
+        
     except Exception as e:
         logger.error(f"Indexing failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -123,15 +146,15 @@ async def index_document(request: IndexRequest):
 async def delete_document(document_id: str):
     try:
         semantic_service = get_semantic_service()
-        # es_client = get_elasticsearch_client()
+        es_client = get_elasticsearch_client()
 
         milvus_result = semantic_service.delete_document(document_id)
-        # es_result = await es_client.delete_document(document_id, refresh=True)
+        es_result = await es_client.delete_document(document_id, refresh=True)
 
         return {
             "document_id": document_id,
             "milvus": milvus_result,
-            # "elasticsearch": es_result,
+            "elasticsearch": es_result,
         }
     except Exception as e:
         logger.error(f"Deletion failed: {e}")

@@ -14,7 +14,7 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 # Copy application code
-COPY src/ ./src/
+# COPY src/ ./src/
 
 # Create temp directory for file uploads
 RUN mkdir temp
@@ -25,4 +25,4 @@ ENV PYTHONPATH=/app/src:$PYTHONPATH
 EXPOSE 8001
 
 # Run the FastAPI application
-CMD ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8001"]
+CMD ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
