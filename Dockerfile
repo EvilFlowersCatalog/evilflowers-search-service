@@ -14,7 +14,7 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 # Copy application code
-# COPY src/ ./src/
+COPY src/ ./src/
 
 # Create temp directory for file uploads
 RUN mkdir temp
