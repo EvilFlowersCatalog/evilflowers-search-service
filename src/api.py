@@ -119,7 +119,7 @@ async def index_document(request: IndexRequest):
     try:
         # Get clients
         es_client = get_elasticsearch_client()
-        # semantic_service = get_semantic_service()  # Uncomment when enabling Milvus
+        semantic_service = get_semantic_service()  # Uncomment when enabling Milvus
         
         # Delete existing document first to prevent duplicates
         # await es_client.delete_document(request.document_id, refresh=True)
@@ -133,15 +133,15 @@ async def index_document(request: IndexRequest):
         )
         
         # Index in Milvus (when enabled)
-        # milvus_result = semantic_service.index_document(
-        #     document_id=request.document_id,
-        #     chunks=request.chunks["chunks"]
-        # )
+        milvus_result = semantic_service.index_document(
+            document_id=request.document_id,
+            chunks=request.chunks["chunks"]
+        )
 
         return {
             "document_id": request.document_id,
             "elasticsearch": es_result,
-            # "milvus": milvus_result,
+            "milvus": milvus_result,
         }
         
     except Exception as e:
