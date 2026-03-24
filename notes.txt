@@ -1,3 +1,30 @@
+CONSIDER
 double indexing into milvus to
 double indexing not in elastic
 what about auto code changes in docker?
+
+what kind of doc_id use ? human readable vs uuid
+mal by search byt service specific alebo moze byt jedna funkcia pre obe a lepsie z nich?
+
+health check curl
+
+
+COMMANDS FOR SERVICE
+docker exec text-service python src/scripts/index_const_multiple.py
+
+docker exec text-service python src/search_test.py
+
+cp /home/xbuianh/data/catalogs/fiit/0b87443f-4f60-49a9-9aa5-c27fd4acb837 ./src/data
+docker compose up -d text-service
+
+curl http://localhost:8001/health | jq
+
+# Drop milvus - need to restart the singleton instance class
+docker restart search-service
+docker exec text-service python src/scripts/index_const_multiple.py
+
+# Delete the entire Elastic index
+curl -X DELETE "http://localhost:9200/evilflowers"
+
+# Verify it's gone
+curl "http://localhost:9200/_cat/indices?v"

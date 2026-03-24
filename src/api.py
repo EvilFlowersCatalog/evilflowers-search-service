@@ -5,8 +5,8 @@ import logging
 import json
 
 from search_service.SemanticService import SemanticService
-from search_service.SemanticSearch import SemanticSearch
-from search_service.ElasticSearchClient import ElasticSearchClient
+from search_service.SemanticService import SemanticService
+from search_service.ElasticService import ElasticService
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -18,8 +18,8 @@ app = FastAPI(
 )
 
 semantic_service: SemanticService | None = None
-elasticsearch_client: ElasticSearchClient | None = None
-semantic_search: SemanticSearch | None = None
+elastic_service: ElasticService | None = None
+semantic_search: SemanticService | None = None
 
 
 def get_semantic_service():
@@ -30,16 +30,16 @@ def get_semantic_service():
 
 
 def get_elasticsearch_client():
-    global elasticsearch_client
-    if elasticsearch_client is None:
-        elasticsearch_client = ElasticSearchClient()
-    return elasticsearch_client
+    global elastic_service
+    if elastic_service is None:
+        elastic_service = ElasticService()
+    return elastic_service
 
 
 def get_semantic_search():
     global semantic_search
     if semantic_search is None:
-        semantic_search = SemanticSearch(get_semantic_service())
+        semantic_search = SemanticService(get_semantic_service())
     return semantic_search
 
 
@@ -74,48 +74,36 @@ class ElasticsearchSearchRequest(BaseModel):
 #         await elasticsearch_client.close()
 #         elasticsearch_client = None
 
-
-@app.get("/stats")
-async def get_stats():
-    try:
-        semantic_service = get_semantic_service()
-        es_client = get_elasticsearch_client()
-
-        # milvus_stats = semantic_service.milvus_manager.get_stats()
-        es_stats = await es_client.stats_overview()
-
-        logger.info("Elasticsearch stats:\n%s", json.dumps(es_stats, indent=2))
-
-        return {
-            "elasticsearch": es_stats,
-            # "milvus": milvus_stats,
-        }
-    except Exception as e:
-        logger.error("Stats endpoint failed: %s", e)
-        return {"error": str(e)}
-
-
 @app.get("/health")
 async def health_check():
     try:
         semantic_service = get_semantic_service()
-        # es_client = get_elasticsearch_client()
 
         milvus_stats = semantic_service.milvus_manager.get_stats()
-        # es_health = await es_client.check_connection()
 
-        return {
+    except Exception as e:
+        milvus_stats = {"status": "unhealthy", "error": str(e)}
+    
+
+    es_client = get_elasticsearch_client()
+    es_health = await es_client.check_connection()
+    es_stats = await es_client.stats_overview()
+
+
+    
+    return {
             "status": "healthy",
             "milvus": milvus_stats,
-            # "elasticsearch": {"connected": es_health},
+            "elasticsearch": {
+                "connected": es_health,
+                **es_stats
+            },
         }
-    except Exception as e:
-        return {"status": "unhealthy", "error": str(e)}
-
 
 @app.post("/index")
 async def index_document(request: IndexRequest):
     print("INDEXING DOCUMENT:", request.document_id)
+
     try:
         # Get clients
         es_client = get_elasticsearch_client()
@@ -171,7 +159,7 @@ async def delete_document(document_id: str):
 @app.post("/search/semantic")
 async def semantic_search_endpoint(request: SemanticSearchRequest):
     try:
-        semantic_search = get_semantic_search()
+        semantic_search = get_semantic_service()
 
         results = semantic_search.search(
             query=request.query,
