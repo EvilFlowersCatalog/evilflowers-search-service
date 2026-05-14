@@ -44,7 +44,7 @@ class ElasticService:
             else (
                 os.getenv(
                     "ELASTICSEARCH_SEARCH_FIELDS",
-                    "text,content,chunk_text,title,metadata.*,tags",
+                    "text,content,chunk_text,title,tags",
                 ).split(",")
             )
         )

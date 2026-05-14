@@ -149,3 +149,12 @@ async def elasticsearch_search(
     except Exception as e:
         logger.error(f"Elasticsearch search failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/documents/{document_id}/chunks")
+async def get_document_chunks(
+    document_id: str,
+    limit: int = 10,
+    es: ElasticService = Depends(get_elastic_service)
+):
+    results = await es.search_documents(query="", document_id=document_id, size=limit)
+    return {"document_id": document_id, "chunks": results}
